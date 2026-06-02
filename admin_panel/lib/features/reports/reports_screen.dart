@@ -1,0 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../repositories/providers.dart';
+final reportsProvider = StreamProvider((ref)=>ref.watch(adminRepositoryProvider).reports());
+class ReportsScreen extends ConsumerWidget { const ReportsScreen({super.key}); @override Widget build(BuildContext context, WidgetRef ref)=>Scaffold(appBar: AppBar(title: const Text('Laporan dan Pengaduan')), body: ref.watch(reportsProvider).when(data:(items)=>ListView(padding: const EdgeInsets.all(16), children: items.map((r)=>Card(child: ListTile(leading: const Icon(Icons.flag_outlined), title: Text(r.reason), subtitle: Text('Status: ${r.status}\nCourt: ${r.courtId ?? '-'} Comment: ${r.commentId ?? '-'}'), isThreeLine: true, trailing: DropdownButton<String>(value: r.status, items: const ['open','in progress','resolved'].map((s)=>DropdownMenuItem(value:s, child:Text(s))).toList(), onChanged:(v){ if(v!=null) ref.read(adminRepositoryProvider).setReportStatus(r.reportId, v); })))) .toList()), error:(e,_)=>Center(child:Text('$e')), loading:()=>const Center(child:CircularProgressIndicator()))); }
