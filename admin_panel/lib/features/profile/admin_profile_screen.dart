@@ -1,0 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/providers.dart';
+import '../../repositories/providers.dart';
+class AdminProfileScreen extends ConsumerWidget { const AdminProfileScreen({super.key}); @override Widget build(BuildContext context, WidgetRef ref){ final u=ref.watch(authProvider).currentUser; return Scaffold(appBar: AppBar(title: const Text('Profile Admin')), body: ListView(padding: const EdgeInsets.all(24), children:[CircleAvatar(radius:42, child: Text((u?.email ?? 'A')[0].toUpperCase())), const SizedBox(height:16), Text(u?.email ?? 'Admin'), ListTile(leading: const Icon(Icons.edit), title: const Text('Edit profil'), onTap:(){}), ListTile(leading: const Icon(Icons.lock), title: const Text('Ubah password'), onTap:(){ if(u?.email!=null) ref.read(authProvider).sendPasswordResetEmail(email:u!.email!); }), ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap:()=>ref.read(adminRepositoryProvider).logout())])); }}
