@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
+import '../../core/theme.dart';
 import '../../repositories/providers.dart';
 
 class AuthGate extends ConsumerWidget {
@@ -29,12 +30,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (mounted) context.go('/home');
     } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); } finally { if (mounted) setState(() => loading = false); }
   }
-  @override Widget build(BuildContext context) => Scaffold(body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 420), child: Card(margin: const EdgeInsets.all(24), child: Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: [
-    const Icon(Icons.sports_tennis, size: 64, color: Color(0xFF0D9488)), Text('PadelFinder', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)), const SizedBox(height: 24),
-    if (register) TextField(controller: name, decoration: const InputDecoration(labelText: 'Nama')),
-    const SizedBox(height: 12), TextField(controller: email, decoration: const InputDecoration(labelText: 'Email')),
-    const SizedBox(height: 12), TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
-    Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => ref.read(authRepositoryProvider).resetPassword(email.text.trim()), child: const Text('Reset password'))),
-    FilledButton(onPressed: loading ? null : submit, child: Text(register ? 'Register' : 'Login')), TextButton(onPressed: () => setState(() => register = !register), child: Text(register ? 'Sudah punya akun? Login' : 'Belum punya akun? Register')),
-  ])))));
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        // keep outer background white for auth screens
+        backgroundColor: Colors.white,
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: AppTheme.appGradient,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.sports_tennis, size: 64, color: Color(0xFF0D9488)),
+                  Text('PadelFinder', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 24),
+                  if (register) TextField(controller: name, decoration: const InputDecoration(labelText: 'Nama')),
+                  const SizedBox(height: 12),
+                  TextField(controller: email, decoration: const InputDecoration(labelText: 'Email')),
+                  const SizedBox(height: 12),
+                  TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
+                  Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => ref.read(authRepositoryProvider).resetPassword(email.text.trim()), child: const Text('Reset password'))),
+                  FilledButton(onPressed: loading ? null : submit, child: Text(register ? 'Register' : 'Login')),
+                  TextButton(onPressed: () => setState(() => register = !register), child: Text(register ? 'Sudah punya akun? Login' : 'Belum punya akun? Register')),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
 }

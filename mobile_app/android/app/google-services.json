@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "946157853827",
+    "project_id": "padel-finder-palembang",
+    "storage_bucket": "padel-finder-palembang.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946157853827:android:dd69c19afb668ed030cfb6",
+        "android_client_info": {
+          "package_name": "com.example.padel_finder_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG2JndDI3OngiSC51xyebiW-oCSUjErRc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

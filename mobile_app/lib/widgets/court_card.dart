@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/court.dart';
+import '../repositories/providers.dart';
+import '../core/providers.dart';
 
-class CourtCard extends StatelessWidget {
+class CourtCard extends ConsumerWidget {
   const CourtCard({super.key, required this.court});
   final Court court;
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context, WidgetRef ref) => Card(
         margin: const EdgeInsets.only(bottom: 16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -20,7 +23,42 @@ class CourtCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(court.address, maxLines: 2, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 12),
-                Row(children: [Icon(Icons.chat_bubble_outline, size: 18), Text(' ${court.commentsCount}'), const SizedBox(width: 18), Icon(Icons.favorite_outline, size: 18), Text(' ${court.favoritesCount}')]),
+                Row(children: [
+                  Icon(Icons.chat_bubble_outline, size: 18),
+                  Text(' ${court.commentsCount}'),
+                  const SizedBox(width: 18),
+                  Builder(builder: (ctx) {
+                    final user = ref.watch(authProvider).currentUser;
+                    if (user == null) {
+                      return Row(children: [Icon(Icons.favorite_outline, size: 18), StreamBuilder<int>(
+                        stream: ref
+                            .read(courtRepositoryProvider)
+                            .favoriteCount(court.courtId),
+                        builder: (context, snapshot) {
+                          final count = snapshot.data ?? 0;
+
+                          return Text(' $count');
+                        },
+                      )]);
+                    }
+                    return StreamBuilder<bool>(
+                      stream: ref.read(courtRepositoryProvider).isFavorite(user.uid, court.courtId),
+                      builder: (context, snapshot) {
+                        final isFav = snapshot.data ?? false;
+                        return Row(children: [Icon(isFav ? Icons.favorite : Icons.favorite_outline, size: 18, color: isFav ? Colors.red : null), StreamBuilder<int>(
+                          stream: ref
+                              .read(courtRepositoryProvider)
+                              .favoriteCount(court.courtId),
+                          builder: (context, snapshot) {
+                            final count = snapshot.data ?? 0;
+
+                            return Text(' $count');
+                          },
+                        )]);
+                      },
+                    );
+                  })
+                ]),
               ]),
             ),
           ]),
