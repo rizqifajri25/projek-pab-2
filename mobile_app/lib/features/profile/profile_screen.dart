@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/profile_stats_provider.dart';
 import '../../repositories/providers.dart';
@@ -215,6 +216,17 @@ class ProfileScreen
                       '$e',
                     ),
                   ),
+
+
+              Card(
+                child: SwitchListTile(
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                  title: const Text('Dark Mode'),
+                  subtitle: const Text('Tampilan lebih nyaman untuk malam hari'),
+                  value: ref.watch(darkModeProvider),
+                  onChanged: (value) => ref.read(darkModeProvider.notifier).state = value,
+                ),
+              ),
 
               ListTile(
                 leading: const Icon(Icons.lock),

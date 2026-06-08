@@ -27,18 +27,18 @@ class AuthRepository {
   final data = doc.data();
 
   if (data == null) {
+    await auth.signOut();
     throw Exception(
-      'Data user tidak ditemukan',
+      'Data user tidak ditemukan atau akun telah dihapus admin',
     );
   }
 
-  if (data['status'] ==
-      'suspended') {
+  if (data['status'] != null && data['status'] != 'active') {
 
     await auth.signOut();
 
     throw Exception(
-      'Akun telah diblokir admin',
+      'Akun dinonaktifkan admin',
     );
   }
 

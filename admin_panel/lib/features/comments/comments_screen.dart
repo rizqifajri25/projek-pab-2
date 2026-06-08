@@ -24,7 +24,7 @@ class CommentsScreen extends ConsumerWidget {
                       (c) => Card(
                         child: ListTile(
                           title: Text(c.comment),
-                          subtitle: Text('Court: ${c.courtId} • User: ${c.userId}'),
+                          subtitle: Text('Lapangan: ${c.courtId} • ${c.userName} • ${c.rating}★'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_outline),
                             onPressed: () => ref.read(adminRepositoryProvider).deleteComment(c.commentId),

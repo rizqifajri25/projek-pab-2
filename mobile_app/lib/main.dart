@@ -20,6 +20,8 @@ class PadelFinderApp extends ConsumerWidget {
         title: 'PadelFinder',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ref.watch(darkModeProvider) ? ThemeMode.dark : ThemeMode.light,
         routerConfig: ref.watch(routerProvider),
       );
 }
