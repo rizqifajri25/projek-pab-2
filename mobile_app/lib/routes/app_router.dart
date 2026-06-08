@@ -10,6 +10,10 @@ import '../features/notifications/notifications_screen.dart';
 import '../features/posting/post_court_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/search/search_screen.dart';
+import '../providers/user_provider.dart';
+import '../repositories/providers.dart';
+
+bool _accountDialogOpen = false;
 
 final routerProvider = Provider<GoRouter>((ref) => GoRouter(routes: [
       GoRoute(path: '/', builder: (_, __) => const AuthGate()),
@@ -21,22 +25,58 @@ final routerProvider = Provider<GoRouter>((ref) => GoRouter(routes: [
         GoRoute(path: '/favorites', builder: (_, __) => const FavoritesScreen()),
         GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
         GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
+        GoRoute(path: '/court/:id', builder: (_, state) => CourtDetailScreen(courtId: state.pathParameters['id']!)),
       ]),
-      GoRoute(path: '/court/:id', builder: (_, state) => CourtDetailScreen(courtId: state.pathParameters['id']!)),
     ]));
 
-class MobileScaffold extends StatelessWidget {
+class MobileScaffold extends ConsumerWidget {
   const MobileScaffold({super.key, required this.child});
   final Widget child;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(currentUserProvider, (previous, next) {
+      next.whenData((user) {
+        if ((user == null || user.status != 'active') && !_accountDialogOpen) {
+          _accountDialogOpen = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) {
+              _accountDialogOpen = false;
+              return;
+            }
+            showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (dialogContext) => AlertDialog(
+                icon: const Icon(Icons.block, color: Colors.red),
+                title: Text(user == null ? 'Akun tidak tersedia' : 'Akun dinonaktifkan'),
+                content: Text(user == null
+                    ? 'Akun Anda telah dihapus oleh admin. Tekan tombol di bawah untuk keluar.'
+                    : 'Akun Anda saat ini berstatus ${user.status}. Tekan tombol di bawah untuk keluar dari akun.'),
+                actions: [
+                  FilledButton(
+                    onPressed: () async {
+                      await ref.read(authRepositoryProvider).logout();
+                      if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+                      _accountDialogOpen = false;
+                      if (context.mounted) context.go('/login');
+                    },
+                    child: const Text('Keluar dari akun'),
+                  ),
+                ],
+              ),
+            );
+          });
+        }
+      });
+    });
+
     final location = GoRouterState.of(context).matchedLocation;
     final routes = ['/home', '/search', '/post', '/favorites', '/profile'];
     final index = routes.indexWhere(location.startsWith);
     return Scaffold(
         // gradient background container
         body: Container(
-          decoration: const BoxDecoration(gradient: AppTheme.appGradient),
+          decoration: BoxDecoration(gradient: ref.watch(darkModeProvider) ? AppTheme.darkGradient : AppTheme.appGradient),
           child: Scaffold(
             backgroundColor: Colors.transparent,
             body: child,

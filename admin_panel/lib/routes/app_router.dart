@@ -44,12 +44,12 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class AdminShell extends StatelessWidget {
+class AdminShell extends ConsumerWidget {
   const AdminShell({super.key, required this.child});
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = [
       {'path': '/dashboard', 'label': 'Dashboard', 'icon': Icons.dashboard_outlined, 'selectedIcon': Icons.dashboard},
       {'path': '/users', 'label': 'User', 'icon': Icons.people_outline, 'selectedIcon': Icons.people},
@@ -63,7 +63,7 @@ class AdminShell extends StatelessWidget {
     final currentIndex = items.indexWhere((item) => currentLocation.startsWith(item['path'] as String)).clamp(0, items.length - 1);
 
     return Container(
-      decoration: const BoxDecoration(gradient: AdminTheme.appGradient),
+      decoration: BoxDecoration(gradient: ref.watch(adminDarkModeProvider) ? AdminTheme.darkGradient : AdminTheme.appGradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Row(

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../repositories/providers.dart';
 import '../../models/report.dart';
+import '../../models/comment.dart';
 import '../../core/providers.dart';
 
 final reportsProvider = StreamProvider((ref) => ref.watch(adminRepositoryProvider).reports());
+final reportReviewsProvider = StreamProvider((ref) => ref.watch(adminRepositoryProvider).comments());
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -16,10 +18,6 @@ class ReportsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Laporan dan Pengaduan')),
       body: ref.watch(reportsProvider).when(
             data: (items) {
-              if (items.isEmpty) {
-                return const Center(child: Padding(padding: EdgeInsets.all(16), child: Text('Belum ada laporan saat ini.')));
-              }
-
               String statusLabel(String status) {
                 switch (status) {
                   case 'open':
@@ -47,14 +45,49 @@ class ReportsScreen extends ConsumerWidget {
               }
 
               String reportType(AppReport r) {
+                if (r.commentId != null) return 'Komentar/review';
                 if (r.courtId != null) return 'Postingan lapangan';
-                if (r.commentId != null) return 'Komentar';
                 return 'Umum';
               }
 
+              final commentsById = <String, CourtComment>{
+                for (final c in ref.watch(reportReviewsProvider).value ?? const <CourtComment>[]) c.commentId: c,
+              };
+
               return ListView(
                 padding: const EdgeInsets.all(16),
-                children: items
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Review & Rating Masuk', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ...(ref.watch(reportReviewsProvider).value ?? const <CourtComment>[])
+                              .take(8)
+                              .map((c) => ListTile(
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: CircleAvatar(child: Text(c.userName.isEmpty ? 'U' : c.userName[0].toUpperCase())),
+                                    title: Text('${c.userName} • ${c.rating}★'),
+                                    subtitle: Text('Lapangan: ${c.courtId}\n${c.comment}'),
+                                  )),
+                          if ((ref.watch(reportReviewsProvider).value ?? const <CourtComment>[]).isEmpty) const Text('Belum ada review pengguna.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (items.isEmpty)
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('Belum ada laporan saat ini.'),
+                      ),
+                    ),
+                  ...items
                     .map(
                       (r) {
                         final createdAt = r.createdAt != null ? r.createdAt!.toLocal().toString().split('.').first : '-';
@@ -84,13 +117,31 @@ class ReportsScreen extends ConsumerWidget {
                                 Text('Tipe laporan: ${reportType(r)}'),
                                 if (r.courtId != null) Text('Lapangan ID: ${r.courtId}'),
                                 if (r.commentId != null) Text('Komentar ID: ${r.commentId}'),
+                                if (r.commentId != null && commentsById[r.commentId] != null)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 8),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(.35),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Review dilaporkan', style: Theme.of(context).textTheme.labelLarge),
+                                        Text('Nama: ${commentsById[r.commentId]!.userName}'),
+                                        Text('Rating: ${commentsById[r.commentId]!.rating} bintang'),
+                                        Text('Komentar: ${commentsById[r.commentId]!.comment}'),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 8),
                                 Text('Deskripsi: ${r.description ?? '-'}'),
                                 if (r.adminFeedback != null && r.adminFeedback!.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   Text(
                                     'Feedback admin: ${r.adminFeedback}',
-                                    style: const TextStyle(color: Colors.black87, fontStyle: FontStyle.italic),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontStyle: FontStyle.italic),
                                   ),
                                 ],
                                 const SizedBox(height: 8),
@@ -188,6 +239,7 @@ class ReportsScreen extends ConsumerWidget {
                       },
                     )
                     .toList(),
+                ],
               );
             },
             error: (e, _) {

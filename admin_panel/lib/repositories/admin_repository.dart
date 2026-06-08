@@ -121,9 +121,17 @@ Stream<List<Court>> courts([
 }
   Stream<List<CourtComment>> comments() => db.collection('comments').orderBy('createdAt', descending: true).snapshots().map((s)=>s.docs.map(CourtComment.fromDoc).toList());
   Stream<List<AppReport>> reports() => db.collection('reports').orderBy('createdAt', descending: true).snapshots().map((s)=>s.docs.map(AppReport.fromDoc).toList());
-  Future<void> setUserStatus(String uid, String status) => db.collection('users').doc(uid).update({'status': status});
+  Future<void> setUserStatus(String uid, String status) async {
+    await db.collection('users').doc(uid).update({'status': status});
+    if (status != 'active') {
+      await _createNotification(uid, 'Akun Anda dinonaktifkan oleh admin. Silakan keluar dari akun.');
+    }
+  }
 
-  Future<void> deleteUserDoc(String uid) => db.collection('users').doc(uid).delete();
+  Future<void> deleteUserDoc(String uid) async {
+    await _createNotification(uid, 'Akun Anda dihapus oleh admin. Silakan keluar dari akun.');
+    await db.collection('users').doc(uid).delete();
+  }
 
   Future<void> suspendUser(String uid) => db.collection('users').doc(uid).update({
         'status': 'suspended',
@@ -188,10 +196,22 @@ Stream<List<Court>> courts([
     final courtId = commentData?['courtId'] as String?;
 
     if (commentDoc.exists) {
+      final rating = (commentData?['rating'] as num?)?.toInt() ?? 0;
       final batch = db.batch();
       batch.delete(db.collection('comments').doc(id));
       if (courtId != null) {
-        batch.update(db.collection('courts').doc(courtId), {'commentsCount': FieldValue.increment(-1)});
+        final courtRef = db.collection('courts').doc(courtId);
+        final courtDoc = await courtRef.get();
+        final currentSum = (courtDoc.data()?['ratingSum'] as num?)?.toInt() ?? 0;
+        final currentCount = (courtDoc.data()?['ratingsCount'] as num?)?.toInt() ?? 0;
+        final nextSum = (currentSum - rating).clamp(0, 1 << 31);
+        final nextCount = (currentCount - (rating > 0 ? 1 : 0)).clamp(0, 1 << 31);
+        batch.set(courtRef, {
+          'commentsCount': FieldValue.increment(-1),
+          if (rating > 0) 'ratingSum': FieldValue.increment(-rating),
+          if (rating > 0) 'ratingsCount': FieldValue.increment(-1),
+          'averageRating': nextCount == 0 ? 0 : nextSum / nextCount,
+        }, SetOptions(merge: true));
       }
       await batch.commit();
 

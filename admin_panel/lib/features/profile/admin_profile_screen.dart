@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../dashboard/dashboard_screen.dart';
 
 import '../../core/providers.dart';
+import '../../core/theme.dart';
 import '../../repositories/providers.dart';
 import '../../models/app_user.dart';
 import '../../services/cloudinary_service.dart';
@@ -205,6 +206,17 @@ class AdminProfileScreen extends ConsumerWidget {
                         error: (e, _) => Center(child: Text('$e')),
                       ),
                   const SizedBox(height: 20),
+
+                  Card(
+                    child: SwitchListTile(
+                      secondary: const Icon(Icons.dark_mode_outlined),
+                      title: const Text('Dark Mode Admin'),
+                      subtitle: const Text('Aktifkan tampilan gelap untuk panel admin'),
+                      value: ref.watch(adminDarkModeProvider),
+                      onChanged: (value) => ref.read(adminDarkModeProvider.notifier).state = value,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   ListTile(
                     leading: const Icon(Icons.lock),
                     title: const Text('Ubah Password'),
